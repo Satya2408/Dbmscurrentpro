@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Users - AcadAura</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #f5f6fa;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .nav-links {
+            list-style: none;
+        }
+        
+        .nav-links li {
+            padding: 15px 25px;
+            transition: background 0.3s ease;
+        }
+        
+        .nav-links li:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 30px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .badge-admin {
+            background: #667eea;
+            color: white;
+        }
+        
+        .badge-user {
+            background: #28a745;
+            color: white;
+        }
+        
+        .badge-pending {
+            background: #ffc107;
+            color: black;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .user-count {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        
+        .count-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">AcadAura Admin</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('admin.pending_users') }}">Pending Users</a></li>
+            <li><a href="{{ url_for('admin.all_users') }}">All Users</a></li>
+            <li><a href="{{ url_for('admin.calendar') }}">Calendar</a></li>
+            <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <div class="header">
+            <h1>All Users</h1>
+            <p>Manage all system users</p>
+            <div class="user-count">
+                Total Users: <span class="count-badge">{{ users|length }}</span>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            {% if users %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                            <span class="badge badge-admin">Admin</span>
+                            {% else %}
+                            <span class="badge badge-user">User</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_approved %}
+                            <span class="badge badge-user">Active</span>
+                            {% else %}
+                            <span class="badge badge-pending">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not user.is_approved and not user.is_admin %}
+                            <a href="{{ url_for('admin.approve_user', user_id=user.id) }}" class="btn btn-approve" style="background: #28a745; color: white; padding: 5px 10px; border-radius: 5px; text-decoration: none; font-size: 12px;">Approve</a>
+                            {% endif %}
+                            {% if not user.is_admin %}
+                            <button class="btn btn-reject" style="background: #dc3545; color: white; padding: 5px 10px; border-radius: 5px; border: none; font-size: 12px; cursor: pointer;">Delete</button>
+                            {% endif %}
+                        </td>
+                        <td>
+    {% if not user.is_approved and not user.is_admin %}
+    <a href="{{ url_for('admin.approve_user', user_id=user.id) }}" class="btn btn-approve">Approve</a>
+    {% endif %}
+    {% if not user.is_faculty and not user.is_admin %}
+   <!-- <a href="{{ url_for('admin.make_faculty', user_id=user.id) }}" class="btn" style="background: #17a2b8; color: white; margin-left: 5px;">Make Faculty</a> -->
+    {% endif %}
+</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+                <h3>No Users Found</h3>
+                <p>There are no users in the system yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
